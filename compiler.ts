@@ -32,12 +32,14 @@ export async function run(watSource : string, config: any) : Promise<number> {
 }
 
 export function opStmts(op : Op) {
+  //+ | - | * | // | % | == | != | <= | >= | < | > | is  
   switch(op) {
     case "+": return [`i32.add`];
     case "-": return [`i32.sub`];
+    case "*": return [`i32.mul`];
+    case "//": return [`i32.div_s`];
+    case "%": return [`i32.rem_s`];
     case ">": return [`i32.gt_s`];
-    case "and": return [`i32.and`];
-    case "or": return [`i32.or`];
     default:
       throw new Error(`Unhandled or unknown op: ${op}`);
   }

@@ -58,6 +58,36 @@ describe('run(source, config) function', () => {
     expect(result).to.equal(5);
   });
 
+  it('subtracts two numbers', async() => {
+    const result = await runTest("2 - 3");
+    expect(result).to.equal(-1);
+  });
+  //+ | - | * | // | % | == | != | <= | >= | < | > | is  
+  it('multiplies two numbers', async() => {
+    const result = await runTest("2 * 3");
+    expect(result).to.equal(6);
+  });
+
+  it('divides two numbers', async() => {
+    const result = await runTest("4 // 2");
+    expect(result).to.equal(2);
+  });
+  //TODO: figure out how to test error throws
+  // it('divides two booleans', async() => {
+  //   const result = await runTest("True // False");
+  //   expect(result).to.equal(2);
+  // });
+
+  it('remainder of division of two numbers', async() => {
+    const result = await runTest("2 % 3");
+    expect(result).to.equal(2);
+  });
+
+  it('equality of two numbers', async() => {
+    const result = await runTest("2 == 3");
+    expect(result).to.equal(false);
+  });
+
   it('prints a boolean', async() => {
     await runTest("print(True)");
     expect(importObject.output).to.equal("True\n");

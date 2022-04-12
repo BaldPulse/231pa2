@@ -9,12 +9,35 @@ export function tcExpr(e : Expr<any>, functions : FunctionsEnv, variables : Body
     case "true": return { ...e, a: "bool" };
     case "false": return { ...e, a: "bool" };
     case "binop": {
+      e.lhs = tcExpr(e.lhs, functions, variables);
+      e.rhs = tcExpr(e.rhs, functions, variables);
       switch(e.op) {
-        case "+": return { ...e, a: "int" };
-        case "-": return { ...e, a: "int" };
+        case "+": 
+          if (e.lhs.a!="int" || e.rhs.a!="int"){
+            throw new Error(`Invalid Operands for ${e.op}`);
+          }
+          return { ...e, a: "int" };
+        case "-": 
+          if (e.lhs.a!="int" || e.rhs.a!="int"){
+            throw new Error(`Invalid Operands for ${e.op}`);
+          }
+          return { ...e, a: "int" };
+        case "*": 
+          if (e.lhs.a!="int" || e.rhs.a!="int"){
+            throw new Error(`Invalid Operands for ${e.op}`);
+          }
+          return { ...e, a: "int" };
+        case "//":
+          if (e.lhs.a!="int" || e.rhs.a!="int"){
+            throw new Error(`Invalid Operands for ${e.op}`);
+          }
+          return { ...e, a: "int" };
+        case "%":
+          if (e.lhs.a!="int" || e.rhs.a!="int"){
+            throw new Error(`Invalid Operands for ${e.op}`);
+          }
+          return { ...e, a: "int" };
         case ">": return { ...e, a: "bool" };
-        case "and": return { ...e, a: "bool" };
-        case "or": return { ...e, a: "bool" };
         default: throw new Error(`Unhandled op ${e.op}`)
       }
     }
