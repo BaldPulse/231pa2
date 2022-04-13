@@ -87,6 +87,10 @@ export function tcExpr(e : Expr<any>, functions : FunctionsEnv, variables : Body
           return { ...e, a: "int" };
         }
     }
+    case "parenthesized": {
+      e.content = tcExpr(e.content, functions, variables);
+      return {...e, a:e.content.a}
+    }
     case "id": return { ...e, a: variables.get(e.name) };
     case "call":
       if(e.name === "print") {

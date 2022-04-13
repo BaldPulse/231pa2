@@ -28,7 +28,7 @@ const importObject = {
     output: ""
   };
 
-const source = "1-1" ;
+const source = "(1-1)" ;
 const t = parser.parse(source);
 console.log(stringifyTree(t.cursor(),source,0));
 // const ast = parseProgram(source);

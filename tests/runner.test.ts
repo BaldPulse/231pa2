@@ -1,6 +1,7 @@
 import { compile, run } from '../compiler';
 import { assert,expect } from 'chai';
 import 'mocha';
+import { stringify } from 'querystring';
 
 function runTest(source : string) {
   return run(compile(source), importObject);
@@ -80,6 +81,7 @@ describe('run(source, config) function', () => {
     try {
       await runTest("x:bool = 1");
     } catch (err:any) {
+      expect(err.message).to.contain("Cannot assign")
       return; // end the test
     }
     assert.fail("didn't throw");
@@ -89,6 +91,7 @@ describe('run(source, config) function', () => {
     try {
       await runTest("x:int = None");
     } catch (err:any) {
+      expect(err.message).to.contain("Cannot assign")
       return; // end the test
     }
     assert.fail("didn't throw");
@@ -98,6 +101,7 @@ describe('run(source, config) function', () => {
     try {
       await runTest("x:int = 1+2");
     } catch (err:any) {
+      expect(err.message).to.contain("Cannot assign non literal")
       return; // end the test
     }
     assert.fail("didn't throw");
@@ -114,6 +118,7 @@ describe('run(source, config) function', () => {
     try {
       await runTest("True + False");
     } catch (err:any) {
+      expect(err.message).to.contain("Invalid Operand")
       return; // end the test
     }
     assert.fail("didn't throw");
@@ -128,6 +133,7 @@ describe('run(source, config) function', () => {
     try {
       await runTest("True - 1");
     } catch (err:any) {
+      expect(err.message).to.contain("Invalid Operand")
       return; // end the test
     }
     assert.fail("didn't throw");
@@ -142,6 +148,7 @@ describe('run(source, config) function', () => {
     try {
       await runTest("True * False");
     } catch (err:any) {
+      expect(err.message).to.contain("Invalid Operand")
       return; // end the test
     }
     assert.fail("didn't throw");
@@ -157,6 +164,7 @@ describe('run(source, config) function', () => {
     try {
       await runTest("True // False");
     } catch (err:any) {
+      expect(err.message).to.contain("Invalid Operand")
       return; // end the test
     }
     assert.fail("didn't throw");
@@ -171,6 +179,7 @@ describe('run(source, config) function', () => {
     try {
       await runTest("2 % False");
     } catch (err:any) {
+      expect(err.message).to.contain("Invalid Operand")
       return; // end the test
     }
     assert.fail("didn't throw");
@@ -190,6 +199,7 @@ describe('run(source, config) function', () => {
     try {
       await runTest("1 == True");
     } catch (err:any) {
+      expect(err.message).to.contain("Invalid Operand")
       return; // end the test
     }
     assert.fail("didn't throw");
@@ -209,6 +219,7 @@ describe('run(source, config) function', () => {
     try {
       await runTest("1 != True");
     } catch (err:any) {
+      expect(err.message).to.contain("Invalid Operand")
       return; // end the test
     }
     assert.fail("didn't throw");
@@ -228,6 +239,7 @@ describe('run(source, config) function', () => {
     try {
       await runTest("True <= True");
     } catch (err:any) {
+      expect(err.message).to.contain("Invalid Operand")
       return; // end the test
     }
     assert.fail("didn't throw");
@@ -237,6 +249,7 @@ describe('run(source, config) function', () => {
     try {
       await runTest("1 <= True");
     } catch (err:any) {
+      expect(err.message).to.contain("Invalid Operand")
       return; // end the test
     }
     assert.fail("didn't throw");
@@ -256,6 +269,7 @@ describe('run(source, config) function', () => {
     try {
       await runTest("True >= True");
     } catch (err:any) {
+      expect(err.message).to.contain("Invalid Operand")
       return; // end the test
     }
     assert.fail("didn't throw");
@@ -265,6 +279,7 @@ describe('run(source, config) function', () => {
     try {
       await runTest("1 >= True");
     } catch (err:any) {
+      expect(err.message).to.contain("Invalid Operand")
       return; // end the test
     }
     assert.fail("didn't throw");
@@ -284,6 +299,7 @@ describe('run(source, config) function', () => {
     try {
       await runTest("True < True");
     } catch (err:any) {
+      expect(err.message).to.contain("Invalid Operand")
       return; // end the test
     }
     assert.fail("didn't throw");
@@ -293,6 +309,7 @@ describe('run(source, config) function', () => {
     try {
       await runTest("1 < True");
     } catch (err:any) {
+      expect(err.message).to.contain("Invalid Operand")
       return; // end the test
     }
     assert.fail("didn't throw");
@@ -312,6 +329,7 @@ describe('run(source, config) function', () => {
     try {
       await runTest("True > True");
     } catch (err:any) {
+      expect(err.message).to.contain("Invalid Operand")
       return; // end the test
     }
     assert.fail("didn't throw");
@@ -321,6 +339,7 @@ describe('run(source, config) function', () => {
     try {
       await runTest("1 > True");
     } catch (err:any) {
+      expect(err.message).to.contain("Invalid Operand")
       return; // end the test
     }
     assert.fail("didn't throw");
@@ -335,6 +354,7 @@ describe('run(source, config) function', () => {
     try {
       await runTest("print(not 1)");
     } catch (err:any) {
+      expect(err.message).to.contain("Invalid Operand")
       return; // end the test
     }
     assert.fail("didn't throw");
@@ -353,5 +373,39 @@ describe('run(source, config) function', () => {
     }
     assert.fail("didn't throw");
   });
+
+  it('fun with parens1', async() => {
+    const result = await runTest("2*(2+2)");
+    expect(result).to.equal(8);
+  });
+
+  it('fun with parens2', async() => {
+    const result = await runTest("2*(-2)");
+    expect(result).to.equal(-4);
+  });
+
+  it('fun with parens3', async() => {
+    const result = await runTest("(2+1)*(-2+3)");
+    expect(result).to.equal(3);
+  });
+
+  it('fun with parens4', async() => {
+    try {
+      await runTest("1*(-(False))");
+    } catch (err:any) {
+      expect(err.message).to.contain("Invalid Operand")
+      return; // end the test
+    }
+    assert.fail("didn't throw");
+  });
+
+  // it('fun with parens5', async() => {
+  //   try {
+  //     await runTest("1*(-(False))");
+  //   } catch (err:any) {
+  //     return; // end the test
+  //   }
+  //   assert.fail("didn't throw");
+  // });
 
 });

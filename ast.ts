@@ -22,6 +22,7 @@ export type Expr<A> =
   //end "literals"
   | { a?: A, tag: "uniop", uop: Uop, oprd: Expr<A>}
   | { a?: A, tag: "binop", op: Op, lhs: Expr<A>, rhs: Expr<A> }
+  | { a?: A, tag: "parenthesized", content: Expr<A> }
   | { a?: A, tag: "id", name: string, global?: boolean }
   | { a?: A, tag: "call", name: string, args: Expr<A>[] }
 

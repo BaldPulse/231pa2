@@ -161,6 +161,15 @@ export function traverseExpr(s : string, t : TreeCursor) : Expr<any> {
         lhs: lhsExpr,
         rhs: rhsExpr
       };
+    case "ParenthesizedExpression":
+      t.firstChild(); 
+      t.nextSibling(); 
+      const cont = traverseExpr(s, t);
+      t.parent();
+      return {
+        tag: "parenthesized",
+        content: cont
+      };
     case "UnaryExpression":
       t.firstChild(); // go to op
       var uopStr = s.substring(t.from, t.to);

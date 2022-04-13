@@ -78,6 +78,10 @@ export function codeGenExpr(expr : Expr<Type>, locals : Env) : Array<string> {
       const uopstmts = uopStmts(expr.uop, oprdExprs);
       return uopstmts;
     }
+    case "parenthesized": {
+      const contExpr = codeGenExpr(expr.content, locals);
+      return contExpr;
+    }
     case "call":
       const valStmts = expr.args.map(e => codeGenExpr(e, locals)).flat();
       let toCall = expr.name;
