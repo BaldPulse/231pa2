@@ -1,5 +1,5 @@
 import { compile, run } from '../compiler';
-import { expect } from 'chai';
+import { assert,expect } from 'chai';
 import 'mocha';
 
 function runTest(source : string) {
@@ -72,10 +72,15 @@ describe('run(source, config) function', () => {
     const result = await runTest("4 // 2");
     expect(result).to.equal(2);
   });
-  //TODO: figure out how to test error throws
+  
   // it('divides two booleans', async() => {
   //   const result = await runTest("True // False");
-  //   expect(result).to.equal(2);
+  //   try {
+  //     await runTest("True // False");
+  //   } catch (err) {
+  //     return; // end the test
+  //   }
+  //   assert.fail("didn't throw");
   // });
 
   it('remainder of division of two numbers', async() => {
@@ -83,10 +88,10 @@ describe('run(source, config) function', () => {
     expect(result).to.equal(2);
   });
 
-  it('equality of two numbers', async() => {
-    const result = await runTest("2 == 3");
-    expect(result).to.equal(false);
-  });
+  // it('equality of two numbers', async() => {
+  //   const result = await runTest("2 == 3");
+  //   expect(result).to.equal(false);
+  // });
 
   it('prints a boolean', async() => {
     await runTest("print(True)");

@@ -70,6 +70,17 @@ export function tcExpr(e : Expr<any>, functions : FunctionsEnv, variables : Body
 
 export function tcStmt(s : Stmt<any>, functions : FunctionsEnv, variables : BodyEnv, currentReturn : Type) : Stmt<Type> {
   switch(s.tag) {
+    case "typedef": {
+      const rhs = tcExpr(s.value, functions, variables);
+      if (rhs.a != s.type) {
+        throw new Error(`Cannot assign ${rhs} to type ${s.type}`);
+      }
+      else{
+        variables.set(s.name, s.type)
+      }
+      //TODO type check typedef
+      return { ...s, value: rhs};
+    }
     case "assign": {
       const rhs = tcExpr(s.value, functions, variables);
       if(variables.has(s.name) && variables.get(s.name) !== rhs.a) {

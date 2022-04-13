@@ -8,7 +8,7 @@ type Env = Map<string, boolean>;
 function variableNames(stmts: Stmt<Type>[]) : string[] {
   const vars : Array<string> = [];
   stmts.forEach((stmt) => {
-    if(stmt.tag === "assign") { vars.push(stmt.name); }
+    if(stmt.tag === "typedef") { vars.push(stmt.name); }
   });
   return vars;
 }
@@ -101,6 +101,12 @@ export function codeGenStmt(stmt : Stmt<Type>, locals : Env) : Array<string> {
       valStmts.push("return");
       return valStmts;
     case "assign":
+      var valStmts = codeGenExpr(stmt.value, locals);
+      if(locals.has(stmt.name)) { valStmts.push(`(local.set $${stmt.name})`); }
+      else { valStmts.push(`(global.set $${stmt.name})`); }
+      return valStmts;
+    case "typedef":
+      //TODO fix this
       var valStmts = codeGenExpr(stmt.value, locals);
       if(locals.has(stmt.name)) { valStmts.push(`(local.set $${stmt.name})`); }
       else { valStmts.push(`(global.set $${stmt.name})`); }

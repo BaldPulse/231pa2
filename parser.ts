@@ -31,26 +31,7 @@ export function traverseStmt(s : string, t : TreeCursor) : Stmt<any> {
       t.parent();
       return { tag: "return", value };
     case "AssignStatement":
-      t.firstChild(); // focused on name (the first child)
-      var name = s.substring(t.from, t.to);
-      t.nextSibling();
-      var tnsn = t.type.name
-      if (tnsn==="TypeDef"){
-        t.firstChild();
-        t.nextSibling();
-        var type = traverseType(s, t);
-        t.parent();
-        t.nextSibling();
-        var value = traverseExpr(s, t);
-        t.parent();
-        return { tag:"typedef", name, value, type};
-      }
-      // t.nextSibling(); // focused on = sign. May need this for complex tasks, like +=!
-      t.nextSibling(); // focused on the value expression
-
-      var value = traverseExpr(s, t);
-      t.parent();
-      return { tag: "assign", name, value };
+      return traverseAssignment(s, t)
     case "ExpressionStatement":
       t.firstChild(); // The child is some kind of expression, the
                       // ExpressionStatement is just a wrapper with no information
@@ -85,6 +66,27 @@ export function traverseStmt(s : string, t : TreeCursor) : Stmt<any> {
       }
       
   }
+}
+
+export function traverseAssignment(s : string, t : TreeCursor) : Stmt<any> {
+  t.firstChild(); // focused on name (the first child)
+  var name = s.substring(t.from, t.to);
+  t.nextSibling();
+  if (t.type.name==="TypeDef"){
+    t.firstChild();
+    t.nextSibling();
+    var type = traverseType(s, t);
+    t.parent();
+    t.nextSibling();
+    t.nextSibling();
+    var value = traverseExpr(s, t);
+    t.parent();
+    return { tag:"typedef", name, value, type};
+  }
+  t.nextSibling(); // focused on the value expression
+  var value = traverseExpr(s, t);
+  t.parent();
+  return { tag: "assign", name, value };
 }
 
 export function traverseType(s : string, t : TreeCursor) : Type {
