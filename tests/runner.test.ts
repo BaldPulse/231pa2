@@ -93,5 +93,14 @@ describe('run(source, config) function', () => {
     expect(importObject.output).to.equal("True\n");
   });
 
+  it('typedef int', async() => {
+    await runTest("x:int = 0\nprint(x)");
+    expect(importObject.output).to.equal("0\n");
+  });
+
+  it('typedef bool', async() => {
+    await runTest("x:int = False\nprint(x)");
+    expect(importObject.output).to.equal("False\n");
+  });
 
 });

@@ -33,7 +33,19 @@ export function traverseStmt(s : string, t : TreeCursor) : Stmt<any> {
     case "AssignStatement":
       t.firstChild(); // focused on name (the first child)
       var name = s.substring(t.from, t.to);
-      t.nextSibling(); // focused on = sign. May need this for complex tasks, like +=!
+      t.nextSibling();
+      var tnsn = t.type.name
+      if (tnsn==="TypeDef"){
+        t.firstChild();
+        t.nextSibling();
+        var type = traverseType(s, t);
+        t.parent();
+        t.nextSibling();
+        var value = traverseExpr(s, t);
+        t.parent();
+        return { tag:"typedef", name, value, type};
+      }
+      // t.nextSibling(); // focused on = sign. May need this for complex tasks, like +=!
       t.nextSibling(); // focused on the value expression
 
       var value = traverseExpr(s, t);
@@ -79,7 +91,7 @@ export function traverseType(s : string, t : TreeCursor) : Type {
   switch(t.type.name) {
     case "VariableName":
       const name = s.substring(t.from, t.to);
-      if(name !== "int") {
+      if(name != "int" && name != "bool") {
         throw new Error("Unknown type: " + name)
       }
       return name;

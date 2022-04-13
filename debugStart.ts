@@ -2,7 +2,7 @@ import { stringifyTree } from "./treeprint";
 import { parseProgram } from "./parser";
 import {parser} from "lezer-python";
 
-const source = "1//1" ;
+const source = "a int = 1" ;
 const t = parser.parse(source);
 console.log(stringifyTree(t.cursor(),source,0));
 const ast = parseProgram(source);
