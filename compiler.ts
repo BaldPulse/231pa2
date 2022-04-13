@@ -8,7 +8,7 @@ type Env = Map<string, boolean>;
 function variableNames(stmts: Stmt<Type>[]) : string[] {
   const vars : Array<string> = [];
   stmts.forEach((stmt) => {
-    if(stmt.tag === "typedef") { vars.push(stmt.name); }
+    if(stmt.tag === "vardef") { vars.push(stmt.name); }
   });
   return vars;
 }
@@ -39,6 +39,11 @@ export function opStmts(op : Op) {
     case "*": return [`i32.mul`];
     case "//": return [`i32.div_s`];
     case "%": return [`i32.rem_s`];
+    case "==": return [`i32.eq`];
+    case "!=": return [`i32.ne`];
+    case "<=": return [`i32.le_s`];
+    case ">=": return [`i32.ge_s`];
+    case "<": return [`i32.lt_s`];
     case ">": return [`i32.gt_s`];
     default:
       throw new Error(`Unhandled or unknown op: ${op}`);
@@ -105,7 +110,7 @@ export function codeGenStmt(stmt : Stmt<Type>, locals : Env) : Array<string> {
       if(locals.has(stmt.name)) { valStmts.push(`(local.set $${stmt.name})`); }
       else { valStmts.push(`(global.set $${stmt.name})`); }
       return valStmts;
-    case "typedef":
+    case "vardef":
       //TODO fix this
       var valStmts = codeGenExpr(stmt.value, locals);
       if(locals.has(stmt.name)) { valStmts.push(`(local.set $${stmt.name})`); }
@@ -143,7 +148,7 @@ export function compile(source : string) : string {
     (module
       (func $print_num (import "imports" "print_num") (param i32) (result i32))
       (func $print_bool (import "imports" "print_bool") (param i32) (result i32))
-      (func $print_none (import "imports" "print_none") (param i32) (result i32))
+      (func $print_none (import "imports" "print_none")  (result i32))
       ${varDecls}
       ${allFuns}
       (func (export "_start") ${retType}

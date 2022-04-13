@@ -51,6 +51,58 @@ describe('run(source, config) function', () => {
     expect(result).to.equal(987);
   });
 
+  it('prints a boolean', async() => {
+    await runTest("print(True)");
+    expect(importObject.output).to.equal("True\n");
+  });
+
+  it('prints a int', async() => {
+    await runTest("print(1)");
+    expect(importObject.output).to.equal("1\n");
+  });
+
+  it('prints None', async() => {
+    await runTest("print(None)");
+    expect(importObject.output).to.equal("None\n");
+  });
+
+  it('vardef int', async() => {
+    await runTest("x:int = 0\nprint(x)");
+    expect(importObject.output).to.equal("0\n");
+  });
+
+  it('vardef bool', async() => {
+    await runTest("x:bool = False\nprint(x)");
+    expect(importObject.output).to.equal("False\n");
+  });
+
+  it('vardef wrong1', async() => {
+    try {
+      await runTest("x:bool = 1");
+    } catch (err:any) {
+      return; // end the test
+    }
+    assert.fail("didn't throw");
+  });
+
+  it('vardef wrong2', async() => {
+    try {
+      await runTest("x:int = None");
+    } catch (err:any) {
+      return; // end the test
+    }
+    assert.fail("didn't throw");
+  });
+
+  it('vardef wrong3', async() => {
+    try {
+      await runTest("x:int = 1+2");
+    } catch (err:any) {
+      return; // end the test
+    }
+    assert.fail("didn't throw");
+  });
+
   // Note: it is often helpful to write tests for a functionality before you
   // implement it. You will make this test pass!
   it('adds two numbers', async() => {
@@ -58,54 +110,220 @@ describe('run(source, config) function', () => {
     expect(result).to.equal(5);
   });
 
+  it('adds two booleans', async() => {
+    try {
+      await runTest("True + False");
+    } catch (err:any) {
+      return; // end the test
+    }
+    assert.fail("didn't throw");
+  });
+
   it('subtracts two numbers', async() => {
     const result = await runTest("2 - 3");
     expect(result).to.equal(-1);
   });
-  //+ | - | * | // | % | == | != | <= | >= | < | > | is  
+
+  it('subtracts two booleans', async() => {
+    try {
+      await runTest("True - 1");
+    } catch (err:any) {
+      return; // end the test
+    }
+    assert.fail("didn't throw");
+  });
+
   it('multiplies two numbers', async() => {
     const result = await runTest("2 * 3");
     expect(result).to.equal(6);
   });
+
+  it('multiplies two booleans', async() => {
+    try {
+      await runTest("True * False");
+    } catch (err:any) {
+      return; // end the test
+    }
+    assert.fail("didn't throw");
+  });
+
 
   it('divides two numbers', async() => {
     const result = await runTest("4 // 2");
     expect(result).to.equal(2);
   });
   
-  // it('divides two booleans', async() => {
-  //   const result = await runTest("True // False");
-  //   try {
-  //     await runTest("True // False");
-  //   } catch (err) {
-  //     return; // end the test
-  //   }
-  //   assert.fail("didn't throw");
-  // });
+  it('divides two booleans', async() => {
+    try {
+      await runTest("True // False");
+    } catch (err:any) {
+      return; // end the test
+    }
+    assert.fail("didn't throw");
+  });
 
   it('remainder of division of two numbers', async() => {
     const result = await runTest("2 % 3");
     expect(result).to.equal(2);
   });
 
-  // it('equality of two numbers', async() => {
-  //   const result = await runTest("2 == 3");
-  //   expect(result).to.equal(false);
-  // });
+  it('remainder of division of boolean and num', async() => {
+    try {
+      await runTest("2 % False");
+    } catch (err:any) {
+      return; // end the test
+    }
+    assert.fail("didn't throw");
+  });
 
-  it('prints a boolean', async() => {
-    await runTest("print(True)");
+  it('equality of two numbers', async() => {
+    const result = await runTest("print(2 == 3)");
+    expect(importObject.output).to.equal("False\n");
+  });
+
+  it('equality of two booleans', async() => {
+    const result = await runTest("print(False == False)");
     expect(importObject.output).to.equal("True\n");
   });
 
-  it('typedef int', async() => {
-    await runTest("x:int = 0\nprint(x)");
-    expect(importObject.output).to.equal("0\n");
+  it('equality of num and bool', async() => {
+    try {
+      await runTest("1 == True");
+    } catch (err:any) {
+      return; // end the test
+    }
+    assert.fail("didn't throw");
   });
 
-  it('typedef bool', async() => {
-    await runTest("x:int = False\nprint(x)");
+  it('inequality of two numbers', async() => {
+    const result = await runTest("print(2 != 3)");
+    expect(importObject.output).to.equal("True\n");
+  });
+
+  it('inequality of two booleans', async() => {
+    const result = await runTest("print(False != False)");
     expect(importObject.output).to.equal("False\n");
+  });
+
+  it('inequality of num and bool', async() => {
+    try {
+      await runTest("1 != True");
+    } catch (err:any) {
+      return; // end the test
+    }
+    assert.fail("didn't throw");
+  });
+
+  it('leq of two numbers', async() => {
+    const result = await runTest("print(2 <= 3)");
+    expect(importObject.output).to.equal("True\n");
+  });
+
+  it('leq of two numbers2', async() => {
+    const result = await runTest("print(2 <= 2)");
+    expect(importObject.output).to.equal("True\n");
+  });
+
+  it('leq of two booleans', async() => {
+    try {
+      await runTest("True <= True");
+    } catch (err:any) {
+      return; // end the test
+    }
+    assert.fail("didn't throw");
+  });
+
+  it('leq of num and bool', async() => {
+    try {
+      await runTest("1 <= True");
+    } catch (err:any) {
+      return; // end the test
+    }
+    assert.fail("didn't throw");
+  });
+
+  it('geq of two numbers', async() => {
+    const result = await runTest("print(2 >= 3)");
+    expect(importObject.output).to.equal("False\n");
+  });
+
+  it('geq of two numbers2', async() => {
+    const result = await runTest("print(2 >= 2)");
+    expect(importObject.output).to.equal("True\n");
+  });
+
+  it('geq of two booleans', async() => {
+    try {
+      await runTest("True >= True");
+    } catch (err:any) {
+      return; // end the test
+    }
+    assert.fail("didn't throw");
+  });
+
+  it('geq of num and bool', async() => {
+    try {
+      await runTest("1 >= True");
+    } catch (err:any) {
+      return; // end the test
+    }
+    assert.fail("didn't throw");
+  });
+
+  it('lesser of two numbers', async() => {
+    const result = await runTest("print(2 < 3)");
+    expect(importObject.output).to.equal("True\n");
+  });
+
+  it('lesser of two numbers2', async() => {
+    const result = await runTest("print(2 < 2)");
+    expect(importObject.output).to.equal("False\n");
+  });
+
+  it('lesser of two booleans', async() => {
+    try {
+      await runTest("True < True");
+    } catch (err:any) {
+      return; // end the test
+    }
+    assert.fail("didn't throw");
+  });
+
+  it('lesser of num and bool', async() => {
+    try {
+      await runTest("1 < True");
+    } catch (err:any) {
+      return; // end the test
+    }
+    assert.fail("didn't throw");
+  });
+
+  it('greater of two numbers', async() => {
+    const result = await runTest("print(2 > 3)");
+    expect(importObject.output).to.equal("False\n");
+  });
+
+  it('greater of two numbers2', async() => {
+    const result = await runTest("print(2 > 2)");
+    expect(importObject.output).to.equal("False\n");
+  });
+
+  it('greater of two booleans', async() => {
+    try {
+      await runTest("True > True");
+    } catch (err:any) {
+      return; // end the test
+    }
+    assert.fail("didn't throw");
+  });
+
+  it('greater of num and bool', async() => {
+    try {
+      await runTest("1 > True");
+    } catch (err:any) {
+      return; // end the test
+    }
+    assert.fail("didn't throw");
   });
 
 });

@@ -4,8 +4,8 @@ import {compile, run} from './compiler';
 document.addEventListener("DOMContentLoaded", async () => {
   function display(arg : string) {
     const elt = document.createElement("pre");
-    document.getElementById("output").appendChild(elt);
-    elt.innerText = arg;
+    document.getElementById("output").innerText = arg;
+    console.log("Logging from WASM: ", arg);
   }
   var importObject = {
     imports: {

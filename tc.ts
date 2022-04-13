@@ -1,4 +1,5 @@
-import { Expr, Stmt, Type } from "./ast";
+import { assert } from "console";
+import { Expr, isLiteral, Stmt, Type } from "./ast";
 
 type FunctionsEnv = Map<string, [Type[], Type]>;
 type BodyEnv = Map<string, Type>;
@@ -8,6 +9,7 @@ export function tcExpr(e : Expr<any>, functions : FunctionsEnv, variables : Body
     case "number": return { ...e, a: "int" };
     case "true": return { ...e, a: "bool" };
     case "false": return { ...e, a: "bool" };
+    case "none": return { ...e, a: "none" };
     case "binop": {
       e.lhs = tcExpr(e.lhs, functions, variables);
       e.rhs = tcExpr(e.rhs, functions, variables);
@@ -37,8 +39,37 @@ export function tcExpr(e : Expr<any>, functions : FunctionsEnv, variables : Body
             throw new Error(`Invalid Operands for ${e.op}`);
           }
           return { ...e, a: "int" };
-        case ">": return { ...e, a: "bool" };
-        default: throw new Error(`Unhandled op ${e.op}`)
+        case "==":
+          if (!((e.lhs.a=="int" && e.rhs.a=="int") || (e.lhs.a=="bool" && e.rhs.a=="bool"))){
+            throw new Error(`Invalid Operands for ${e.op}`);
+          }
+          return { ...e, a: "bool" };
+        case "!=":
+          if (!((e.lhs.a=="int" && e.rhs.a=="int") || (e.lhs.a=="bool" && e.rhs.a=="bool"))){
+            throw new Error(`Invalid Operands for ${e.op}`);
+          }
+          return { ...e, a: "bool" };
+        case "<=":
+          if (!(e.lhs.a=="int" && e.rhs.a=="int")){
+            throw new Error(`Invalid Operands for ${e.op}`);
+          }
+          return { ...e, a: "bool" };
+        case ">=":
+          if (!(e.lhs.a=="int" && e.rhs.a=="int")){
+            throw new Error(`Invalid Operands for ${e.op}`);
+          }
+          return { ...e, a: "bool" };
+        case "<": 
+          if (!(e.lhs.a=="int" && e.rhs.a=="int")){
+            throw new Error(`Invalid Operands for ${e.op}`);
+          }
+          return { ...e, a: "bool" };
+        case ">": 
+          if (!(e.lhs.a=="int" && e.rhs.a=="int")){
+            throw new Error(`Invalid Operands for ${e.op}`);
+          }
+          return { ...e, a: "bool" };
+        default: throw new Error(`Unhandled op ${e.op}`);
       }
     }
     case "id": return { ...e, a: variables.get(e.name) };
@@ -68,9 +99,14 @@ export function tcExpr(e : Expr<any>, functions : FunctionsEnv, variables : Body
   }
 }
 
+
 export function tcStmt(s : Stmt<any>, functions : FunctionsEnv, variables : BodyEnv, currentReturn : Type) : Stmt<Type> {
   switch(s.tag) {
-    case "typedef": {
+    case "vardef": {
+      //TODO type check vardef
+      if(! isLiteral(s.value)){
+        throw new Error(`Cannot assign non literal in variable definition`);
+      }
       const rhs = tcExpr(s.value, functions, variables);
       if (rhs.a != s.type) {
         throw new Error(`Cannot assign ${rhs} to type ${s.type}`);
@@ -78,7 +114,6 @@ export function tcStmt(s : Stmt<any>, functions : FunctionsEnv, variables : Body
       else{
         variables.set(s.name, s.type)
       }
-      //TODO type check typedef
       return { ...s, value: rhs};
     }
     case "assign": {

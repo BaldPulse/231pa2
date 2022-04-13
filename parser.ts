@@ -81,7 +81,7 @@ export function traverseAssignment(s : string, t : TreeCursor) : Stmt<any> {
     t.nextSibling();
     var value = traverseExpr(s, t);
     t.parent();
-    return { tag:"typedef", name, value, type};
+    return { tag:"vardef", name, value, type};
   }
   t.nextSibling(); // focused on the value expression
   var value = traverseExpr(s, t);
@@ -131,6 +131,8 @@ export function traverseExpr(s : string, t : TreeCursor) : Expr<any> {
       else { return { tag: "false" }; }
     case "Number":
       return { tag: "number", value: Number(s.substring(t.from, t.to)) };
+    case "None":
+      return { tag: "none"};
     case "VariableName":
       return { tag: "id", name: s.substring(t.from, t.to) };
     case "CallExpression":
