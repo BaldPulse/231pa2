@@ -1,6 +1,6 @@
 import { TreeCursor } from 'lezer';
 import {parser} from 'lezer-python';
-import {Parameter, Stmt, Expr, Type, isOp} from './ast';
+import {Parameter, Stmt, Expr, Type, isOp, isUop} from './ast';
 
 export function parseProgram(source : string) : Array<Stmt<any>> {
   const t = parser.parse(source).cursor();
@@ -150,7 +150,7 @@ export function traverseExpr(s : string, t : TreeCursor) : Expr<any> {
       t.nextSibling(); // go to op
       var opStr = s.substring(t.from, t.to);
       if(!isOp(opStr)) {
-        throw new Error(`Unknown or unhandled op: ${opStr}`);
+        throw new Error(`Unknown or unhandled binary op: ${opStr}`);
       }
       t.nextSibling(); // go to rhs
       const rhsExpr = traverseExpr(s, t);
@@ -160,6 +160,20 @@ export function traverseExpr(s : string, t : TreeCursor) : Expr<any> {
         op: opStr,
         lhs: lhsExpr,
         rhs: rhsExpr
+      };
+    case "UnaryExpression":
+      t.firstChild(); // go to op
+      var uopStr = s.substring(t.from, t.to);
+      if(!isUop(uopStr)) {
+        throw new Error(`Unknown or unhandled unary op: ${uopStr}`);
+      }
+      t.nextSibling(); // go to operand
+      const operand = traverseExpr(s, t);
+      t.parent();
+      return {
+        tag: "uniop",
+        uop: uopStr,
+        oprd: operand
       };
   
   }

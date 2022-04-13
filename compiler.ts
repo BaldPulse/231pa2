@@ -1,5 +1,5 @@
 import wabt from 'wabt';
-import {Stmt, Expr, Type, Op} from './ast';
+import {Stmt, Expr, Type, Op, Uop} from './ast';
 import {parseProgram} from './parser';
 import { tcProgram } from './tc';
 
@@ -31,7 +31,7 @@ export async function run(watSource : string, config: any) : Promise<number> {
   return (wasmModule.instance.exports as any)._start();
 }
 
-export function opStmts(op : Op) {
+export function opStmts(op : Op): Array<string> {
   //+ | - | * | // | % | == | != | <= | >= | < | > | is  
   switch(op) {
     case "+": return [`i32.add`];
@@ -50,6 +50,13 @@ export function opStmts(op : Op) {
   }
 }
 
+export function uopStmts(uop : Uop, oprdCode:Array<string>): Array<string> {
+  switch(uop) {
+    case "not": return [...oprdCode, `i32.eqz`];
+    case "-": return [`(i32.const 0)`, ...oprdCode, `i32.sub`]
+  }
+}
+
 export function codeGenExpr(expr : Expr<Type>, locals : Env) : Array<string> {
   switch(expr.tag) {
     case "number": return [`(i32.const ${expr.value})`];
@@ -65,6 +72,11 @@ export function codeGenExpr(expr : Expr<Type>, locals : Env) : Array<string> {
       const rhsExprs = codeGenExpr(expr.rhs, locals);
       const opstmts = opStmts(expr.op);
       return [...lhsExprs, ...rhsExprs, ...opstmts];
+    }
+    case "uniop": {
+      const oprdExprs = codeGenExpr(expr.oprd, locals);
+      const uopstmts = uopStmts(expr.uop, oprdExprs);
+      return uopstmts;
     }
     case "call":
       const valStmts = expr.args.map(e => codeGenExpr(e, locals)).flat();

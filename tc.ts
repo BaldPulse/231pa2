@@ -72,6 +72,21 @@ export function tcExpr(e : Expr<any>, functions : FunctionsEnv, variables : Body
         default: throw new Error(`Unhandled op ${e.op}`);
       }
     }
+    case "uniop": {
+      e.oprd = tcExpr(e.oprd, functions, variables);
+      switch (e.uop){
+        case "not":
+          if (e.oprd.a !="bool"){
+            throw new Error(`Invalid Operand for ${e.uop}`);
+          }
+          return { ...e, a: "bool" };
+        case "-":
+          if (e.oprd.a != "int"){
+            throw new Error(`Invalid Operand for ${e.uop}`)
+          }
+          return { ...e, a: "int" };
+        }
+    }
     case "id": return { ...e, a: variables.get(e.name) };
     case "call":
       if(e.name === "print") {

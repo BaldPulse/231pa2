@@ -28,8 +28,8 @@ const importObject = {
     output: ""
   };
 
-const source = "x:int = 0\nprint(x)" ;
-// const t = parser.parse(source);
-// console.log(stringifyTree(t.cursor(),source,0));
+const source = "1-1" ;
+const t = parser.parse(source);
+console.log(stringifyTree(t.cursor(),source,0));
 // const ast = parseProgram(source);
 // console.log(JSON.stringify(ast, null,2));

@@ -326,4 +326,32 @@ describe('run(source, config) function', () => {
     assert.fail("didn't throw");
   });
 
+  it('not bool', async() => {
+    const result = await runTest("print(not True)");
+    expect(importObject.output).to.equal("False\n");
+  });
+
+  it('not int', async() => {
+    try {
+      await runTest("print(not 1)");
+    } catch (err:any) {
+      return; // end the test
+    }
+    assert.fail("didn't throw");
+  });
+
+  it('negative int', async() => {
+    const result = await runTest("print(-1)");
+    expect(importObject.output).to.equal("-1\n");
+  });
+
+  it('negative bool', async() => {
+    try {
+      await runTest("print(- True)");
+    } catch (err:any) {
+      return; // end the test
+    }
+    assert.fail("didn't throw");
+  });
+
 });
