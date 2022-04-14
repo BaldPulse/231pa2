@@ -3,9 +3,11 @@ import {compile, run} from './compiler';
 
 document.addEventListener("DOMContentLoaded", async () => {
   function display(arg : string) {
-    const elt = document.createElement("pre");
-    document.getElementById("output").innerText = arg;
-    console.log("Logging from WASM: ", arg);
+    const output = document.getElementById("output");
+    output.textContent += arg + "\n";
+    // const elt = document.createElement("pre");
+    // document.getElementById("output").innerText = arg;
+    // console.log("Logging from WASM: ", arg);
   }
   var importObject = {
     imports: {
@@ -32,8 +34,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const output = document.getElementById("output");
     try {
       const wat = compile(program);
-      const code = document.getElementById("generated-code");
-      code.textContent = wat;
+      // const code = document.getElementById("generated-code");
+      // code.textContent = wat;
       const result = await run(wat, importObject);
       output.textContent += String(result);
       output.setAttribute("style", "color: black");

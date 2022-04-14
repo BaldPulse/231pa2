@@ -211,6 +211,9 @@ export function tcStmt(s : Stmt<any>, functions : FunctionsEnv, variables : Body
       }
       return { ...s, value: valTyp, a:valTyp.a };
     }
+    case "pass": {
+      return { ...s, a:"none" };
+    }
   }
 }
 

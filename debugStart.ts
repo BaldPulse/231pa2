@@ -30,20 +30,14 @@ const importObject = {
   };
 
 const source = `
-def fun1(a:int)->int:
-  if a==0:
-    return 0
-  else:
-    print(1)
-    return fun2(a)
+def f(a:int):
+  while(a>0):
+    a = a-1
+    print(a)
+    if(a<3):
+      return
 
-def fun2(a:int)->int:
-  if a==0:
-    return 0
-  else:
-    print(2)
-    return fun2(a)
-fun1(4)
+f(5)
 `;
 // console.log(source);//\nelif 2==3:\n\tprint(False)\nelse:\n\tprint(0)" ;
 const t = parser.parse(source);
