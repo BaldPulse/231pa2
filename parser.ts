@@ -1,6 +1,6 @@
 import { TreeCursor } from 'lezer';
 import {parser} from 'lezer-python';
-import {Parameter, Stmt, Expr, Type, isOp, isUop} from './ast';
+import {Parameter, Stmt, Ifstmt, Expr, Type, isOp, isUop} from './ast';
 
 export function parseProgram(source : string) : Array<Stmt<any>> {
   const t = parser.parse(source).cursor();
@@ -31,7 +31,9 @@ export function traverseStmt(s : string, t : TreeCursor) : Stmt<any> {
       t.parent();
       return { tag: "return", value };
     case "AssignStatement":
-      return traverseAssignment(s, t)
+      return traverseAssignment(s, t);
+    case "IfStatement":
+      return traverseIf(s, t);
     case "ExpressionStatement":
       t.firstChild(); // The child is some kind of expression, the
                       // ExpressionStatement is just a wrapper with no information
@@ -66,6 +68,40 @@ export function traverseStmt(s : string, t : TreeCursor) : Stmt<any> {
       }
       
   }
+}
+
+export function traverseIf(s : string, t: TreeCursor) : Stmt<any> {
+  var vifs : Ifstmt<any>[] = [];
+  t.firstChild();
+  do{
+    if(t.type.name == "else"){
+      t.nextSibling()
+      let ebody = traverseBody(s,t);
+      t.parent();
+      return {tag:"if", ifs: vifs, else:ebody}
+    }
+    t.nextSibling();
+    let cond = traverseExpr(s,t);
+    t.nextSibling();
+    let body = traverseBody(s, t);
+    let curif:Ifstmt<any> = {tag:"subif", condition:cond, body:body};
+    vifs.push(curif);
+  }
+  while(t.nextSibling())
+  t.parent();
+  return {tag:"if", ifs: vifs};
+}
+
+export function traverseBody(s : string, t : TreeCursor){
+  t.firstChild();
+  t.nextSibling();
+  const stmts = [];
+  do {
+    stmts.push(traverseStmt(s, t));
+  } while(t.nextSibling()); // t.nextSibling() returns false when it reaches
+                            //  the end of the list of children
+  t.parent();
+  return stmts;
 }
 
 export function traverseAssignment(s : string, t : TreeCursor) : Stmt<any> {

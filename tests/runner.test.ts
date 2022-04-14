@@ -399,6 +399,26 @@ describe('run(source, config) function', () => {
     assert.fail("didn't throw");
   });
 
+  it('assign before define', async() => {
+    try {
+      await runTest("x = 1");
+    } catch (err:any) {
+      expect(err.message).to.contain("Assignment before definition")
+      return; // end the test
+    }
+    assert.fail("didn't throw");
+  });
+
+  it('duplicate definition', async() => {
+    try {
+      await runTest("x:int = 1\n x:bool = True");
+    } catch (err:any) {
+      expect(err.message).to.contain("Duplicate definition")
+      return; // end the test
+    }
+    assert.fail("didn't throw");
+  });
+
   // it('fun with parens5', async() => {
   //   try {
   //     await runTest("1*(-(False))");
@@ -406,6 +426,11 @@ describe('run(source, config) function', () => {
   //     return; // end the test
   //   }
   //   assert.fail("didn't throw");
+  // });
+
+  // it('if', async() => {
+  //   const result = await runTest("2*(2+2)");
+  //   expect(result).to.equal(8);
   // });
 
 });

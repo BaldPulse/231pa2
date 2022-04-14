@@ -2,6 +2,7 @@ import { stringifyTree } from "./treeprint";
 import { parseProgram } from "./parser";
 import { compile, run  } from "./compiler";
 import {parser} from "lezer-python";
+import { tcProgram } from './tc';
 
 const importObject = {
     imports: {
@@ -28,8 +29,9 @@ const importObject = {
     output: ""
   };
 
-const source = "(1-1)" ;
+const source = "if 1==1 :\n\tprint(True)\nelse:\n\tprint(False)"//\nelif 2==3:\n\tprint(False)\nelse:\n\tprint(0)" ;
 const t = parser.parse(source);
 console.log(stringifyTree(t.cursor(),source,0));
-// const ast = parseProgram(source);
-// console.log(JSON.stringify(ast, null,2));
+const ast = parseProgram(source);
+console.log(JSON.stringify((ast), null,2));
+console.log(compile(source));

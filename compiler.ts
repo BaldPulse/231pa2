@@ -117,6 +117,55 @@ export function codeGenStmt(stmt : Stmt<Type>, locals : Env) : Array<string> {
         ${varDecls}
         ${stmtsBody}
         (i32.const 0))`];
+    case "if":
+      var ifCode = ``;
+      for (let i=0; i<stmt.ifs.length; i++){
+        if(i==0){
+          let cond = codeGenExpr(stmt.ifs[0].condition, locals).flat();
+          const condCode = cond.join("\n");
+          let ifbody = stmt.ifs[0].body.map(s => codeGenStmt(s, withParamsAndVariables)).flat();
+          const bodyCode = ifbody.join("\n");
+          ifCode=(
+          `
+          ${condCode}
+          (if\n
+            (then\n
+              ${bodyCode}
+            )
+          `)
+        }
+        else{
+          let condCode = codeGenExpr(stmt.ifs[0].condition, locals);
+          let ifbody = stmt.ifs[0].body.map(s => codeGenStmt(s, withParamsAndVariables)).flat();
+          const bodyCode = ifbody.join("\n");
+          let exifCode=(
+          `
+          (else
+          ${condCode}
+          (if
+          (then
+            ${bodyCode}
+          )
+          `)
+          ifCode = [ifCode, exifCode].flat().join("\n");
+        }
+      }
+      if("else" in stmt){
+        let elsebody = stmt.else.map(s => codeGenStmt(s, withParamsAndVariables)).flat();
+        const bodyCode = elsebody.join("\n");
+        let exifCode=(
+        `
+        (else
+          ${bodyCode}
+        )
+        `
+        )
+        ifCode = [ifCode, exifCode].flat().join("\n");
+      }
+      ifCode= [ifCode, `)`.repeat(stmt.ifs.length*2-2), `)`].flat().join("");
+      console.log(`)`.repeat(stmt.ifs.length*2));
+      return [ifCode];
+    
     case "return":
       var valStmts = codeGenExpr(stmt.value, locals);
       valStmts.push("return");
