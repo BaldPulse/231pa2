@@ -46,14 +46,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.compile = exports.codeGenStmt = exports.codeGenExpr = exports.opStmts = exports.run = void 0;
+exports.compile = exports.codeGenStmt = exports.codeGenExpr = exports.uopStmts = exports.opStmts = exports.run = void 0;
 var wabt_1 = __importDefault(require("wabt"));
 var parser_1 = require("./parser");
 var tc_1 = require("./tc");
+var LoopLabel = 1;
 function variableNames(stmts) {
     var vars = [];
     stmts.forEach(function (stmt) {
-        if (stmt.tag === "assign") {
+        if (stmt.tag === "vardef") {
             vars.push(stmt.name);
         }
     });
@@ -95,12 +96,24 @@ function opStmts(op) {
         case "*": return ["i32.mul"];
         case "//": return ["i32.div_s"];
         case "%": return ["i32.rem_s"];
+        case "==": return ["i32.eq"];
+        case "!=": return ["i32.ne"];
+        case "<=": return ["i32.le_s"];
+        case ">=": return ["i32.ge_s"];
+        case "<": return ["i32.lt_s"];
         case ">": return ["i32.gt_s"];
         default:
             throw new Error("Unhandled or unknown op: " + op);
     }
 }
 exports.opStmts = opStmts;
+function uopStmts(uop, oprdCode) {
+    switch (uop) {
+        case "not": return __spreadArrays(oprdCode, ["i32.eqz"]);
+        case "-": return __spreadArrays(["(i32.const 0)"], oprdCode, ["i32.sub"]);
+    }
+}
+exports.uopStmts = uopStmts;
 function codeGenExpr(expr, locals) {
     switch (expr.tag) {
         case "number": return ["(i32.const " + expr.value + ")"];
@@ -120,6 +133,15 @@ function codeGenExpr(expr, locals) {
             var rhsExprs = codeGenExpr(expr.rhs, locals);
             var opstmts = opStmts(expr.op);
             return __spreadArrays(lhsExprs, rhsExprs, opstmts);
+        }
+        case "uniop": {
+            var oprdExprs = codeGenExpr(expr.oprd, locals);
+            var uopstmts = uopStmts(expr.uop, oprdExprs);
+            return uopstmts;
+        }
+        case "parenthesized": {
+            var contExpr = codeGenExpr(expr.content, locals);
+            return contExpr;
         }
         case "call":
             var valStmts = expr.args.map(function (e) { return codeGenExpr(e, locals); }).flat();
@@ -156,6 +178,45 @@ function codeGenStmt(stmt, locals) {
             var stmts = stmt.body.map(function (s) { return codeGenStmt(s, withParamsAndVariables_1); }).flat();
             var stmtsBody = stmts.join("\n");
             return ["(func $" + stmt.name + " " + params + " (result i32)\n        (local $scratch i32)\n        " + varDecls + "\n        " + stmtsBody + "\n        (i32.const 0))"];
+        case "if":
+            var ifCode = "";
+            for (var i = 0; i < stmt.ifs.length; i++) {
+                if (i == 0) {
+                    var cond = codeGenExpr(stmt.ifs[i].condition, locals).flat();
+                    var condCode = cond.join("\n");
+                    var ifbody = stmt.ifs[i].body.map(function (s) { return codeGenStmt(s, locals); }).flat();
+                    var bodyCode = ifbody.join("\n");
+                    var exifCode = ("\n          " + condCode + "\n          (if\n\n            (then\n\n              " + bodyCode + "\n            )\n          ");
+                    ifCode = [ifCode, exifCode].flat().join("\n");
+                }
+                else {
+                    var cond = codeGenExpr(stmt.ifs[i].condition, locals).flat();
+                    var condCode = cond.join("\n");
+                    var ifbody = stmt.ifs[i].body.map(function (s) { return codeGenStmt(s, locals); }).flat();
+                    var bodyCode = ifbody.join("\n");
+                    var exifCode = ("\n          (else\n          " + condCode + "\n          (if\n          (then\n            " + bodyCode + "\n          )\n          ");
+                    ifCode = [ifCode, exifCode].flat().join("\n");
+                }
+            }
+            if ("else" in stmt) {
+                var elsebody = stmt.else.map(function (s) { return codeGenStmt(s, locals); }).flat();
+                var bodyCode = elsebody.join("\n");
+                var exifCode = ("\n        (else\n          " + bodyCode + "\n        )\n        ");
+                ifCode = [ifCode, exifCode].flat().join("\n");
+            }
+            ifCode = [ifCode, ")".repeat(stmt.ifs.length * 2 - 2), ")"].flat().join("");
+            return [ifCode];
+        case "while":
+            var looplabel = "loop" + LoopLabel.toString();
+            var blocklabel = "block" + LoopLabel.toString();
+            var whilecond = codeGenExpr(stmt.condition, locals).flat();
+            var whilecondCode = whilecond.join("\n");
+            var whilebody = stmt.body.map(function (s) { return codeGenStmt(s, locals); }).flat();
+            var whilebodyCode = whilebody.join("\n");
+            var whileCode = "\n      (block $" + blocklabel + "\n        (loop $" + looplabel + "\n          " + whilecondCode + "\n          i32.eqz\n          br_if $" + blocklabel + "\n          " + whilebodyCode + "\n          br $" + looplabel + "\n        )\n      )\n      ";
+            return [whileCode];
+        case "while":
+            return ["nop\n"];
         case "return":
             var valStmts = codeGenExpr(stmt.value, locals);
             valStmts.push("return");
@@ -169,7 +230,7 @@ function codeGenStmt(stmt, locals) {
                 valStmts.push("(global.set $" + stmt.name + ")");
             }
             return valStmts;
-        case "typedef":
+        case "vardef":
             var valStmts = codeGenExpr(stmt.value, locals);
             if (locals.has(stmt.name)) {
                 valStmts.push("(local.set $" + stmt.name + ")");
@@ -203,6 +264,6 @@ function compile(source) {
         retType = "(result i32)";
         retVal = "(local.get $scratch)";
     }
-    return "\n    (module\n      (func $print_num (import \"imports\" \"print_num\") (param i32) (result i32))\n      (func $print_bool (import \"imports\" \"print_bool\") (param i32) (result i32))\n      (func $print_none (import \"imports\" \"print_none\") (param i32) (result i32))\n      " + varDecls + "\n      " + allFuns + "\n      (func (export \"_start\") " + retType + "\n        " + main + "\n        " + retVal + "\n      )\n    ) \n  ";
+    return "\n    (module\n      (func $print_num (import \"imports\" \"print_num\") (param i32) (result i32))\n      (func $print_bool (import \"imports\" \"print_bool\") (param i32) (result i32))\n      (func $print_none (import \"imports\" \"print_none\")  (result i32))\n      " + varDecls + "\n      " + allFuns + "\n      (func (export \"_start\") " + retType + "\n        " + main + "\n        " + retVal + "\n      )\n    ) \n  ";
 }
 exports.compile = compile;

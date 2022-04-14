@@ -43,6 +43,8 @@ export function traverseStmt(s : string, t : TreeCursor) : Stmt<any> {
       let whilebody = traverseBody(s, t);
       t.parent();
       return {tag:"while", condition:whilecondition, body:whilebody};
+    case "PassStatement":
+      return {tag:"pass"};
     case "ExpressionStatement":
       t.firstChild(); // The child is some kind of expression, the
                       // ExpressionStatement is just a wrapper with no information
@@ -231,7 +233,10 @@ export function traverseExpr(s : string, t : TreeCursor) : Expr<any> {
         uop: uopStr,
         oprd: operand
       };
-  
+    default:
+      return {
+        tag:"none"
+      }
   }
 }
 

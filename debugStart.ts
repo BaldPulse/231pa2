@@ -30,16 +30,23 @@ const importObject = {
   };
 
 const source = `
-x:int = 0
-while(x<10):
-  x=x+1
-  if(x<5):
-    print(x)
-print(x)
+def fun1(a:int)->int:
+  if a==0:
+    return 0
+  else:
+    print(1)
+    return fun2(a)
+def fun2(a:int)->int
+  if a==0:
+    return 0
+  else:
+    print(2)
+    return fun2(a)
+fun1(4)
 `;
 // console.log(source);//\nelif 2==3:\n\tprint(False)\nelse:\n\tprint(0)" ;
-// const t = parser.parse(source);
-// console.log(stringifyTree(t.cursor(),source,0));
-// const ast = parseProgram(source);
-// console.log(JSON.stringify((ast), null,2));
+const t = parser.parse(source);
+console.log(stringifyTree(t.cursor(),source,0));
+const ast = parseProgram(source);
+console.log(JSON.stringify((ast), null,2));
 console.log(compile(source));

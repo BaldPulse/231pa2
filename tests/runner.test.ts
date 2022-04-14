@@ -523,6 +523,92 @@ describe('run(source, config) function', () => {
     expect(importObject.output).to.equal("1\n2\n3\n4\n10\n");
   });
   
-  
+  it('simple function1', async() => {
+    const result = await runTest(`
+    def fun()->int:
+      a:int = 0
+      print(a)
+      return a
+    fun()
+    `);
+    expect(importObject.output).to.equal("0\n");
+    expect(result).to.equal(0);
+  });
+
+  it('simple function2', async() => {
+    const result = await runTest(`
+    def fun(a:int)->int:
+      print(a)
+      return a
+    fun(0)
+    `);
+    expect(importObject.output).to.equal("0\n");
+    expect(result).to.equal(0);
+  });
+
+  it('simple function3', async() => {
+    const result = await runTest(`
+    def fun(a:int, b:int):
+      print(a)
+      print(b)
+    fun(0,1)
+    `);
+    expect(importObject.output).to.equal("0\n1\n");
+  });
+
+  it('nested function1', async() => {
+    const result = await runTest(`
+    def fun(a:int):
+      print(a)
+    def fun2(a:int, b:int):
+      print(b) 
+      fun(a)
+    fun2(0,1)
+    `);
+    expect(importObject.output).to.equal("1\n0\n");
+  });
+
+  it('nested function2', async() => {
+    const result = await runTest(`
+    def fun2(a:int, b:int)->int:
+      return a+b
+    def fun(a:int):
+      print(a)
+    fun(fun2(1,1))
+    `);
+    expect(importObject.output).to.equal("2\n");
+  });
+
+  it('recursion 1', async() => {
+    const result = await runTest(`
+    def fun(a:int)->int:
+      if(a<1):
+        return 0
+      else:
+        print(a)
+        return fun(a-1)
+    fun(3)
+    `);
+    expect(importObject.output).to.equal("3\n2\n1\n");
+  });
+
+  it('recursion 2', async() => {
+    const result = await runTest(`
+    def fun1(a:int)->int:
+      if a==0:
+        return 0
+      else:
+        print(1)
+        return fun2(a)
+    def fun2(a:int)->int
+      if a==0:
+        return 0
+      else:
+        print(2)
+        return fun2(a)
+    fun1(4)
+    `);
+    expect(importObject.output).to.equal("1\n2\n1\n2\n");
+  });
 
 });

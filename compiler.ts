@@ -139,7 +139,7 @@ export function codeGenStmt(stmt : Stmt<Type>, locals : Env) : Array<string> {
         else{
           let cond = codeGenExpr(stmt.ifs[i].condition, locals).flat();
           const condCode = cond.join("\n");
-          let ifbody = stmt.ifs[i].body.map(s => codeGenStmt(s, withParamsAndVariables)).flat();
+          let ifbody = stmt.ifs[i].body.map(s => codeGenStmt(s, locals)).flat();
           const bodyCode = ifbody.join("\n");
           let exifCode=(
           `
@@ -154,7 +154,7 @@ export function codeGenStmt(stmt : Stmt<Type>, locals : Env) : Array<string> {
         }
       }
       if("else" in stmt){
-        let elsebody = stmt.else.map(s => codeGenStmt(s, withParamsAndVariables)).flat();
+        let elsebody = stmt.else.map(s => codeGenStmt(s, locals)).flat();
         const bodyCode = elsebody.join("\n");
         let exifCode=(
         `
@@ -187,6 +187,8 @@ export function codeGenStmt(stmt : Stmt<Type>, locals : Env) : Array<string> {
       )
       `;
       return [whileCode];
+    case "while":
+      return ["nop\n"];
     case "return":
       var valStmts = codeGenExpr(stmt.value, locals);
       valStmts.push("return");

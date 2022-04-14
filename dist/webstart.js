@@ -40,8 +40,8 @@ var compiler_1 = require("./compiler");
 document.addEventListener("DOMContentLoaded", function () { return __awaiter(void 0, void 0, void 0, function () {
     function display(arg) {
         var elt = document.createElement("pre");
-        document.getElementById("output").appendChild(elt);
-        elt.innerText = arg;
+        document.getElementById("output").innerText = arg;
+        console.log("Logging from WASM: ", arg);
     }
     var importObject, runButton, userCode;
     return __generator(this, function (_a) {

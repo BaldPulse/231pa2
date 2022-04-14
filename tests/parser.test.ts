@@ -27,6 +27,15 @@ describe('traverseExpr(c, s) function', () => {
 });
 
 describe('traverseStmt(c, s) function', () => {
+  // it('traverse a function def', () => {
+  // let source = `
+  // def fun():
+  //   pass
+  // `
+  // const t = parser.parse(source).cursor();
+  // const parsed = traverseStmt(source, t);
+  // expect(parsed).to.deep.equal({tag: "define", name:"fun", params:[], body: [{tag:"pass"}]});
+  // });  
   // TODO: add tests here to ensure traverseStmt works as expected
 });
 
@@ -40,5 +49,9 @@ describe('parseProgram(source) function', () => {
     expect(parsed).to.deep.equal([{tag: "expr", expr: {tag: "number", value: 987}}]);
   });  
 
+  it('parse pass', () => {
+    const parsed = parseProgram("pass");
+    expect(parsed).to.deep.equal([{tag: "pass"}]);
+  });  
   // TODO: add additional tests here to ensure parse works as expected
 });

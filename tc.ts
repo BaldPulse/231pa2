@@ -3,6 +3,7 @@ import { Expr, Ifstmt, isLiteral, Stmt, Type } from "./ast";
 
 type FunctionsEnv = Map<string, [Type[], Type]>;
 type BodyEnv = Map<string, Type>;
+var inDefine = false;
 
 export function tcExpr(e : Expr<any>, functions : FunctionsEnv, variables : BodyEnv) : Expr<Type> {
   switch(e.tag) {
@@ -153,6 +154,21 @@ export function tcStmt(s : Stmt<any>, functions : FunctionsEnv, variables : Body
       const bodyvars = new Map<string, Type>(variables.entries());
       s.params.forEach(p => { bodyvars.set(p.name, p.typ)});
       const newStmts = s.body.map(bs => tcStmt(bs, functions, bodyvars, s.ret));
+      let haveReturn = false;
+      for (let bstmt of newStmts){
+        if(bstmt.tag=="return"){
+          haveReturn=true;
+        }
+        if(bstmt.tag == "if"){
+          if("r" in bstmt){
+            if(bstmt.r == s.ret)
+              haveReturn=true;
+          }
+        }
+      }
+      if(!haveReturn && s.ret!= "none"){
+        throw new Error("Function with return type specified must return");
+      }
       return { ...s, body: newStmts };
     }
     case "if": {
@@ -162,6 +178,20 @@ export function tcStmt(s : Stmt<any>, functions : FunctionsEnv, variables : Body
       }
       if ('else' in s){
         let newelse = s.else.map(bs => tcStmt(bs, functions, variables, currentReturn));
+        for (let part of newelse){
+          if (part.tag=="return"){
+            s.r = part.a;
+            for (let sif of s.ifs){
+              if("r" in sif){
+                if(sif.r != s.r){
+                  s.r = "none";
+                  break;
+                }
+              }
+            }
+            break;
+          }
+        }
         return {...s, ifs:newifs, else:newelse};
       }
       return {...s, ifs:newifs};
@@ -179,7 +209,7 @@ export function tcStmt(s : Stmt<any>, functions : FunctionsEnv, variables : Body
       if(valTyp.a !== currentReturn) {
         throw new Error(`${valTyp} returned but ${currentReturn} expected.`);
       }
-      return { ...s, value: valTyp };
+      return { ...s, value: valTyp, a:valTyp.a };
     }
   }
 }
@@ -190,6 +220,12 @@ export function tcSubif(i : Ifstmt<any>, functions : FunctionsEnv, variables : B
     throw new Error("Conditional statement not typed boolean")
   }
   const newbody = i.body.map(bs => tcStmt(bs, functions, variables, currentReturn));
+  for (let part of newbody){
+    if (part.tag=="return"){
+      i.r = part.a;
+      break;
+    }
+  }
   for (let istmt of i.body){
     if(istmt.tag=="vardef"){
       throw new Error("Variable definition in If block");

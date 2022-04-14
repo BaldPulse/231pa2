@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.traverseArguments = exports.traverseExpr = exports.traverseParameters = exports.traverseType = exports.traverseAssignment = exports.traverseStmt = exports.traverseStmts = exports.parseProgram = void 0;
+exports.traverseArguments = exports.traverseExpr = exports.traverseParameters = exports.traverseType = exports.traverseAssignment = exports.traverseBody = exports.traverseIf = exports.traverseStmt = exports.traverseStmts = exports.parseProgram = void 0;
 var lezer_python_1 = require("lezer-python");
 var ast_1 = require("./ast");
 function parseProgram(source) {
@@ -33,6 +33,19 @@ function traverseStmt(s, t) {
             return { tag: "return", value: value };
         case "AssignStatement":
             return traverseAssignment(s, t);
+        case "IfStatement":
+            return traverseIf(s, t);
+        case "WhileStatement":
+            t.firstChild(); //while
+            t.nextSibling(); //condition
+            var whilecondition = traverseExpr(s, t);
+            t.nextSibling(); //body
+            t.firstChild(); //:
+            var whilebody = traverseBody(s, t);
+            t.parent();
+            return { tag: "while", condition: whilecondition, body: whilebody };
+        case "PassStatement":
+            return { tag: "pass" };
         case "ExpressionStatement":
             t.firstChild(); // The child is some kind of expression, the
             // ExpressionStatement is just a wrapper with no information
@@ -68,6 +81,41 @@ function traverseStmt(s, t) {
     }
 }
 exports.traverseStmt = traverseStmt;
+function traverseIf(s, t) {
+    var vifs = [];
+    t.firstChild();
+    do {
+        if (t.type.name == "else") {
+            t.nextSibling();
+            var ebody = traverseBody(s, t);
+            t.parent();
+            return { tag: "if", ifs: vifs, else: ebody };
+        }
+        else if (t.type.name == "elif" || t.type.name == "if") {
+            t.nextSibling();
+            var cond = traverseExpr(s, t);
+            t.nextSibling();
+            var body = traverseBody(s, t);
+            var curif = { tag: "subif", condition: cond, body: body };
+            vifs.push(curif);
+        }
+    } while (t.nextSibling());
+    t.parent();
+    return { tag: "if", ifs: vifs };
+}
+exports.traverseIf = traverseIf;
+function traverseBody(s, t) {
+    t.firstChild();
+    t.nextSibling();
+    var stmts = [];
+    do {
+        stmts.push(traverseStmt(s, t));
+    } while (t.nextSibling()); // t.nextSibling() returns false when it reaches
+    //  the end of the list of children
+    t.parent();
+    return stmts;
+}
+exports.traverseBody = traverseBody;
 function traverseAssignment(s, t) {
     t.firstChild(); // focused on name (the first child)
     var name = s.substring(t.from, t.to);
@@ -81,7 +129,7 @@ function traverseAssignment(s, t) {
         t.nextSibling();
         var value = traverseExpr(s, t);
         t.parent();
-        return { tag: "typedef", name: name, value: value, type: type };
+        return { tag: "vardef", name: name, value: value, type: type };
     }
     t.nextSibling(); // focused on the value expression
     var value = traverseExpr(s, t);
@@ -137,6 +185,8 @@ function traverseExpr(s, t) {
             }
         case "Number":
             return { tag: "number", value: Number(s.substring(t.from, t.to)) };
+        case "None":
+            return { tag: "none" };
         case "VariableName":
             return { tag: "id", name: s.substring(t.from, t.to) };
         case "CallExpression":
@@ -154,7 +204,7 @@ function traverseExpr(s, t) {
             t.nextSibling(); // go to op
             var opStr = s.substring(t.from, t.to);
             if (!ast_1.isOp(opStr)) {
-                throw new Error("Unknown or unhandled op: " + opStr);
+                throw new Error("Unknown or unhandled binary op: " + opStr);
             }
             t.nextSibling(); // go to rhs
             var rhsExpr = traverseExpr(s, t);
@@ -164,6 +214,33 @@ function traverseExpr(s, t) {
                 op: opStr,
                 lhs: lhsExpr,
                 rhs: rhsExpr
+            };
+        case "ParenthesizedExpression":
+            t.firstChild();
+            t.nextSibling();
+            var cont = traverseExpr(s, t);
+            t.parent();
+            return {
+                tag: "parenthesized",
+                content: cont
+            };
+        case "UnaryExpression":
+            t.firstChild(); // go to op
+            var uopStr = s.substring(t.from, t.to);
+            if (!ast_1.isUop(uopStr)) {
+                throw new Error("Unknown or unhandled unary op: " + uopStr);
+            }
+            t.nextSibling(); // go to operand
+            var operand = traverseExpr(s, t);
+            t.parent();
+            return {
+                tag: "uniop",
+                uop: uopStr,
+                oprd: operand
+            };
+        default:
+            return {
+                tag: "none"
             };
     }
 }
