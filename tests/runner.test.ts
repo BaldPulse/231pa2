@@ -496,6 +496,21 @@ describe('run(source, config) function', () => {
     expect(importObject.output).to.equal("1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n");
   });
 
+  it('nested while loop', async() => {
+    const result = await runTest(`
+    x:int = 0
+    y:int = 0
+    while(x<2):
+      x=x+1
+      y = 0
+      while(y<2):
+        print(y)
+        y=y+1
+      print(x)
+    `);
+    expect(importObject.output).to.equal("0\n1\n1\n0\n1\n2\n");
+  });
+
   it('if in while loop', async() => {
     const result = await runTest(`
     x:int = 0
@@ -507,6 +522,7 @@ describe('run(source, config) function', () => {
     `);
     expect(importObject.output).to.equal("1\n2\n3\n4\n10\n");
   });
+  
   
 
 });

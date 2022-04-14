@@ -33,7 +33,9 @@ const source = `
 x:int = 0
 while(x<10):
   x=x+1
-  print(x)
+  if(x<5):
+    print(x)
+print(x)
 `;
 // console.log(source);//\nelif 2==3:\n\tprint(False)\nelse:\n\tprint(0)" ;
 // const t = parser.parse(source);

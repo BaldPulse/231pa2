@@ -41,6 +41,7 @@ export function traverseStmt(s : string, t : TreeCursor) : Stmt<any> {
       t.nextSibling(); //body
       t.firstChild(); //:
       let whilebody = traverseBody(s, t);
+      t.parent();
       return {tag:"while", condition:whilecondition, body:whilebody};
     case "ExpressionStatement":
       t.firstChild(); // The child is some kind of expression, the

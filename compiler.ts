@@ -124,7 +124,7 @@ export function codeGenStmt(stmt : Stmt<Type>, locals : Env) : Array<string> {
         if(i==0){
           let cond = codeGenExpr(stmt.ifs[i].condition, locals).flat();
           const condCode = cond.join("\n");
-          let ifbody = stmt.ifs[i].body.map(s => codeGenStmt(s, withParamsAndVariables)).flat();
+          let ifbody = stmt.ifs[i].body.map(s => codeGenStmt(s, locals)).flat();
           const bodyCode = ifbody.join("\n");
           let exifCode=(
           `
