@@ -599,16 +599,48 @@ describe('run(source, config) function', () => {
         return 0
       else:
         print(1)
+        a=a-1
         return fun2(a)
-    def fun2(a:int)->int
+    def fun2(a:int)->int:
       if a==0:
         return 0
       else:
         print(2)
-        return fun2(a)
+        a=a-1
+        return fun1(a)
     fun1(4)
     `);
     expect(importObject.output).to.equal("1\n2\n1\n2\n");
+  });
+
+  it('missing return', async() => {
+    try {
+      const result = await runTest(`
+      def fun1(a:int)->int:
+        if a==0:
+          return 0
+        else:
+          print(1)
+          a=a-1
+      `);
+    }
+    catch (err:any) {
+      expect(err.message).to.contain("Function with return type specified must return")
+      return; // end the test
+    }
+  });
+
+  it('mismatch return', async() => {
+    try {
+      const result = await runTest(`
+      def fun1(a:bool)->int:
+        return a
+      `);
+    }
+    catch (err:any) {
+      expect(err.message).to.contain("returned but int expe")
+      return; // end the test
+    }
   });
 
 });

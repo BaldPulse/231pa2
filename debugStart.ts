@@ -36,7 +36,8 @@ def fun1(a:int)->int:
   else:
     print(1)
     return fun2(a)
-def fun2(a:int)->int
+
+def fun2(a:int)->int:
   if a==0:
     return 0
   else:
