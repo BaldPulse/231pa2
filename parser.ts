@@ -34,6 +34,14 @@ export function traverseStmt(s : string, t : TreeCursor) : Stmt<any> {
       return traverseAssignment(s, t);
     case "IfStatement":
       return traverseIf(s, t);
+    case "WhileStatement":
+      t.firstChild(); //while
+      t.nextSibling(); //condition
+      let whilecondition = traverseExpr(s,t);
+      t.nextSibling(); //body
+      t.firstChild(); //:
+      let whilebody = traverseBody(s, t);
+      return {tag:"while", condition:whilecondition, body:whilebody};
     case "ExpressionStatement":
       t.firstChild(); // The child is some kind of expression, the
                       // ExpressionStatement is just a wrapper with no information
@@ -80,12 +88,14 @@ export function traverseIf(s : string, t: TreeCursor) : Stmt<any> {
       t.parent();
       return {tag:"if", ifs: vifs, else:ebody}
     }
-    t.nextSibling();
-    let cond = traverseExpr(s,t);
-    t.nextSibling();
-    let body = traverseBody(s, t);
-    let curif:Ifstmt<any> = {tag:"subif", condition:cond, body:body};
-    vifs.push(curif);
+    else if (t.type.name == "elif" || t.type.name == "if"){
+      t.nextSibling();
+      let cond = traverseExpr(s,t);
+      t.nextSibling();
+      let body = traverseBody(s, t);
+      let curif:Ifstmt<any> = {tag:"subif", condition:cond, body:body};
+      vifs.push(curif);
+    }
   }
   while(t.nextSibling())
   t.parent();

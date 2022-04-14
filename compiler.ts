@@ -4,6 +4,7 @@ import {parseProgram} from './parser';
 import { tcProgram } from './tc';
 
 type Env = Map<string, boolean>;
+var LoopLabel : number = 1
 
 function variableNames(stmts: Stmt<Type>[]) : string[] {
   const vars : Array<string> = [];
@@ -121,11 +122,11 @@ export function codeGenStmt(stmt : Stmt<Type>, locals : Env) : Array<string> {
       var ifCode = ``;
       for (let i=0; i<stmt.ifs.length; i++){
         if(i==0){
-          let cond = codeGenExpr(stmt.ifs[0].condition, locals).flat();
+          let cond = codeGenExpr(stmt.ifs[i].condition, locals).flat();
           const condCode = cond.join("\n");
-          let ifbody = stmt.ifs[0].body.map(s => codeGenStmt(s, withParamsAndVariables)).flat();
+          let ifbody = stmt.ifs[i].body.map(s => codeGenStmt(s, withParamsAndVariables)).flat();
           const bodyCode = ifbody.join("\n");
-          ifCode=(
+          let exifCode=(
           `
           ${condCode}
           (if\n
@@ -133,10 +134,12 @@ export function codeGenStmt(stmt : Stmt<Type>, locals : Env) : Array<string> {
               ${bodyCode}
             )
           `)
+          ifCode = [ifCode, exifCode].flat().join("\n");
         }
         else{
-          let condCode = codeGenExpr(stmt.ifs[0].condition, locals);
-          let ifbody = stmt.ifs[0].body.map(s => codeGenStmt(s, withParamsAndVariables)).flat();
+          let cond = codeGenExpr(stmt.ifs[i].condition, locals).flat();
+          const condCode = cond.join("\n");
+          let ifbody = stmt.ifs[i].body.map(s => codeGenStmt(s, withParamsAndVariables)).flat();
           const bodyCode = ifbody.join("\n");
           let exifCode=(
           `
@@ -163,9 +166,27 @@ export function codeGenStmt(stmt : Stmt<Type>, locals : Env) : Array<string> {
         ifCode = [ifCode, exifCode].flat().join("\n");
       }
       ifCode= [ifCode, `)`.repeat(stmt.ifs.length*2-2), `)`].flat().join("");
-      console.log(`)`.repeat(stmt.ifs.length*2));
       return [ifCode];
     
+    case "while":
+      let looplabel = "loop" + LoopLabel.toString();
+      let blocklabel = "block" + LoopLabel.toString();
+      let whilecond = codeGenExpr(stmt.condition, locals).flat();
+      const whilecondCode = whilecond.join("\n");
+      let whilebody = stmt.body.map(s => codeGenStmt(s, locals)).flat();
+      const whilebodyCode = whilebody.join("\n");
+      let whileCode = `
+      (block $${blocklabel}
+        (loop $${looplabel}
+          ${whilecondCode}
+          i32.eqz
+          br_if $${blocklabel}
+          ${whilebodyCode}
+          br $${looplabel}
+        )
+      )
+      `;
+      return [whileCode];
     case "return":
       var valStmts = codeGenExpr(stmt.value, locals);
       valStmts.push("return");
@@ -176,7 +197,6 @@ export function codeGenStmt(stmt : Stmt<Type>, locals : Env) : Array<string> {
       else { valStmts.push(`(global.set $${stmt.name})`); }
       return valStmts;
     case "vardef":
-      //TODO fix this
       var valStmts = codeGenExpr(stmt.value, locals);
       if(locals.has(stmt.name)) { valStmts.push(`(local.set $${stmt.name})`); }
       else { valStmts.push(`(global.set $${stmt.name})`); }

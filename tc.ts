@@ -123,7 +123,6 @@ export function tcStmt(s : Stmt<any>, functions : FunctionsEnv, variables : Body
   var localvariables = new Map<string, Type>();
   switch(s.tag) {
     case "vardef": {
-      //TODO type check vardef
       if(! isLiteral(s.value)){
         throw new Error(`Cannot assign non literal in variable definition`);
       }
@@ -167,6 +166,10 @@ export function tcStmt(s : Stmt<any>, functions : FunctionsEnv, variables : Body
       }
       return {...s, ifs:newifs};
     }
+    case "while": {
+      let newbody = s.body.map(bs => tcStmt(bs, functions, variables, currentReturn));
+      return {...s, condition:tcExpr(s.condition, functions, variables), body:newbody};
+    }
     case "expr": {
       const ret = tcExpr(s.expr, functions, variables);
       return { ...s, expr: ret };
@@ -187,6 +190,11 @@ export function tcSubif(i : Ifstmt<any>, functions : FunctionsEnv, variables : B
     throw new Error("Conditional statement not typed boolean")
   }
   const newbody = i.body.map(bs => tcStmt(bs, functions, variables, currentReturn));
+  for (let istmt of i.body){
+    if(istmt.tag=="vardef"){
+      throw new Error("Variable definition in If block");
+    }
+  }
   return {...i, body:newbody};
 }
 

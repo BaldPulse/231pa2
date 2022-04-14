@@ -428,9 +428,85 @@ describe('run(source, config) function', () => {
   //   assert.fail("didn't throw");
   // });
 
-  // it('if', async() => {
-  //   const result = await runTest("2*(2+2)");
-  //   expect(result).to.equal(8);
-  // });
+  it('if', async() => {
+    const result = await runTest("if 1==1 :\n\tprint(True)");
+    expect(importObject.output).to.equal("True\n");
+  });
+
+  it('if else', async() => {
+    const result = await runTest("if 1!=1 :\n\tprint(True)\nelse:\n\tprint(False)");
+    expect(importObject.output).to.equal("False\n");
+  });
+
+  it('if elif else', async() => {
+    const result = await runTest("if 1!=1 :\n\tprint(True)\nelif 1==1 :\n\tprint(-10)\nelse:\n\tprint(False)");
+    expect(importObject.output).to.equal("-10\n");
+  });
+
+  it('nested if1', async() => {
+    const result = await runTest(`
+    if 1==1 :
+      if 1==1 :
+        print(-10)
+    else:
+      print(False) 
+  `);
+    expect(importObject.output).to.equal("-10\n");
+  });
+
+  it('nested if2', async() => {
+    const result = await runTest(`
+    if 1!=1 :
+      if 1==1 :
+        print(-10)
+    else:
+      print(False)
+      if 1==1 :
+        print(True)
+    `);
+    expect(importObject.output).to.equal("False\nTrue\n");
+  });
+
+  it('vardef in if', async() => {
+    try {
+      await runTest(`
+      if 1!=1 :
+        x:int = 1
+        if 1==1 :
+          print(x)
+      else:
+        print(False)
+        if 1==1 :
+          print(True)
+      `);
+    } catch (err:any) {
+      expect(err.message).to.contain("Variable definition")
+      return; // end the test
+    }
+    assert.fail("didn't throw");
+  });
+
+  it('while loop', async() => {
+    const result = await runTest(`
+    x:int = 0
+    while(x<10):
+      x=x+1
+      print(x)
+    `);
+    expect(importObject.output).to.equal("1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n");
+  });
+
+  it('if in while loop', async() => {
+    const result = await runTest(`
+    x:int = 0
+    while(x<10):
+      x=x+1
+      if(x<5):
+        print(x)
+    print(x)
+    `);
+    expect(importObject.output).to.equal("1\n2\n3\n4\n10\n");
+  });
+  
 
 });

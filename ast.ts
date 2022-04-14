@@ -10,6 +10,7 @@ export type Stmt<A> =
   | { a?: A, tag: "assign", name: string, value: Expr<A> }
   | { a?: A, tag: "vardef", name: string, value: Expr<A>, type: Type }
   | { a?: A, tag: "if", ifs: Ifstmt<A>[], else?: Stmt<A>[]}
+  | { a?: A, tag: "while", condition: Expr<A>, body: Stmt<A>[]}
   | { a?: A, tag: "expr", expr: Expr<A> }
   | { a?: A, tag: "define", name: string, params: Parameter[], ret: Type, body: Stmt<A>[] }
   | { a?: A, tag: "return", value: Expr<A> }
